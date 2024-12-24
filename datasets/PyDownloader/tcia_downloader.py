@@ -13,11 +13,11 @@ from tqdm import tqdm
 # ======================
 
 TCIA_FILE_PATH = "../QIN-Breast/QIN-BREAST_2015-09-04.tcia"
-MAX_WORKERS = 1
+MAX_WORKERS = 13
 DOWNLOAD_LOG_FILE = "download_failed.log"
 
 # Whether to only download a subrange of the Series UIDs
-USE_RANGE = True
+USE_RANGE = False
 START_INDEX = 22
 END_INDEX = 30
 
@@ -30,7 +30,9 @@ RETRY_SLEEP = 3  # seconds
 #   FILTER_DICT = {"Modality": "MR"}   # Only download Series where metadata has "Modality" == "MR"
 #   FILTER_DICT = {"Modality": "CT", "Collection": "QIN-BREAST"}
 #   FILTER_DICT = {}  # No filter (download everything)
-FILTER_DICT = {"Modality": "MR"}
+
+FILTER_DICT = {}
+# FILTER_DICT = {"Modality": "MR"}
 
 
 # ======================
@@ -128,6 +130,7 @@ def verify_md5_in_folder(folder_path: str) -> bool:
     with open(csv_path, 'r', encoding='utf-8') as f:
         lines = f.read().strip().splitlines()
 
+    # Remove header if present
     if lines and 'SOPInstanceUID' in lines[0]:
         lines = lines[1:]
 
@@ -135,6 +138,7 @@ def verify_md5_in_folder(folder_path: str) -> bool:
         cols = line.split(',')
         if len(cols) < 2:
             continue
+
         sop_uid, ref_md5 = cols[0].strip(), cols[1].strip()
         
         dicom_path = os.path.join(folder_path, f"{sop_uid}.dcm")
@@ -143,12 +147,16 @@ def verify_md5_in_folder(folder_path: str) -> bool:
             return False
         
         actual_md5 = compute_file_md5(dicom_path)
+        # Compare both values in lowercase
         if actual_md5.lower() != ref_md5.lower():
             print(f"[{folder_path}] MD5 mismatch: {dicom_path}")
+            print(f"    Expected: {ref_md5.lower()}")
+            print(f"    Actual:   {actual_md5.lower()}")
             return False
 
     print(f"[{folder_path}] All files match MD5 hashes.")
     return True
+
 
 def download_series_with_md5(series_uid: str, out_zip_path: str) -> bool:
     """
@@ -273,7 +281,7 @@ def main():
     if USE_RANGE:
         series_uids = series_uids[START_INDEX:END_INDEX]
 
-    print(f"Found {len(series_uids)} Series UIDs, starting parallel download...")
+    print(f"Found {len(series_uids)} Series UIDs, starting {MAX_WORKERS} thread(s) download...")
 
     # Prepare a log file for permanent failures
     if os.path.exists(DOWNLOAD_LOG_FILE):
