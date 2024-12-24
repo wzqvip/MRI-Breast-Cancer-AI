@@ -1,7 +1,6 @@
 import requests
 import json
-import zipfile
-from io import BytesIO
+import time
 
 def parse_tcia_file(filepath: str) -> dict:
     """
@@ -91,6 +90,17 @@ def get_series_metadata(series_uid: str) -> dict:
         print(f"无法解析 SeriesInstanceUID {series_uid} 的响应内容。")
         return {}
 
+def print_series_metadata(metadata: dict, series_number: int):
+    """
+    格式化并打印 Series 的详细信息。
+    """
+    print(f"--- Series {series_number} ---")
+    for key, value in metadata.items():
+        # 将驼峰命名转换为空格分隔，并适当格式化键名
+        formatted_key = ''.join([' ' + char if char.isupper() else char for char in key]).strip()
+        print(f"{formatted_key}: {value}")
+    print("\n")
+
 def main():
     # 假设 .tcia 文件的名称是 example.tcia
     tcia_path = "../QIN-Breast/QIN-BREAST_2015-09-04.tcia"
@@ -117,14 +127,14 @@ def main():
     print("\n获取每个 SeriesInstanceUID 的详细信息：\n")
     
     for idx, series_uid in enumerate(series_uids, start=1):
-        print(f"--- Series {idx} ---")
         metadata = get_series_metadata(series_uid)
         if metadata:
-            for key, value in metadata.items():
-                print(f"{key}: {value}")
+            print_series_metadata(metadata, idx)
         else:
-            print(f"SeriesInstanceUID {series_uid} 没有返回有效的元数据。")
-        print("\n")
+            print(f"SeriesInstanceUID {series_uid} 没有返回有效的元数据。\n")
+        
+        # 为了避免请求过于频繁，可以适当暂停
+        time.sleep(0.5)  # 暂停0.5秒
 
 if __name__ == "__main__":
     main()
