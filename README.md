@@ -8,7 +8,7 @@
 
 The official TCIA downloader only works in single-thread mode and lacks speed visibility. 
 
-So we made our own Python based downloader.
+So we made our own Python based downloader. `datasets\PyDownloader\tcia_downloader.py`
 
 ***tcia_downloader** *addresses these issues by:
 
