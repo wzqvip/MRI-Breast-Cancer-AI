@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 /datasets/PyDownloader/QIN-BREAST
 datasets/PyDownloader/QIN-BREAST.zip
+/datasets/PyDownloader/QIN-BREAST-01-0068
