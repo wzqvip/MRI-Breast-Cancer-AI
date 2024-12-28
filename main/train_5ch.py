@@ -36,8 +36,6 @@ def train_model(model, dataloader, criterion, optimizer, device='cuda', num_epoc
 
 
 if __name__ == "__main__":
-    # 1) 先假设您已经生成了 "sample_list.csv"
-    #    里面包含 ct_path, pet_path, mr_dwi, mr_t1, mr_dynamic, label
     csv_path = "./sample_list.csv"
 
     # 2) 可选 transforms (去掉 Normalize2D, 或自定义3D)
@@ -45,12 +43,12 @@ if __name__ == "__main__":
     transform = transforms.Compose([])  # 不做额外 transform
 
     dataset = MultiModal3DDataset(csv_path, transform=transform, output_shape=(64,64,64))
-    dataloader = DataLoader(dataset, batch_size=30, shuffle=True, num_workers=0)
+    dataloader = DataLoader(dataset, batch_size=20, shuffle=True, num_workers=0)
 
     # 3) 初始化模型, loss, optimizer
     model = Simple3DCNN_5ch(in_channels=5, num_classes=2)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = optim.Adam(model.parameters(), lr=1e-5)
 
     # 4) 训练
-    train_model(model, dataloader, criterion, optimizer, device='cuda', num_epochs=10)
+    train_model(model, dataloader, criterion, optimizer, device='cuda', num_epochs=200)

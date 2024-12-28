@@ -35,10 +35,10 @@ def train_model(model, dataloader, criterion, optimizer, device='cuda', num_epoc
 if __name__ == "__main__":
     csv_path = "./sample_list.csv"
     dataset = MultiModal3DDataset(csv_path, transform=None, output_shape=(64,64,64))
-    dataloader = DataLoader(dataset, batch_size=2, shuffle=True, num_workers=4)
+    dataloader = DataLoader(dataset, batch_size=20, shuffle=True, num_workers=4)
 
     model = SlowR50_5ch(in_channels=5, num_classes=2, pretrained=True)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = optim.Adam(model.parameters(), lr=1e-5)
 
-    train_model(model, dataloader, criterion, optimizer, device='cuda', num_epochs=10)
+    train_model(model, dataloader, criterion, optimizer, device='cuda', num_epochs=200)
