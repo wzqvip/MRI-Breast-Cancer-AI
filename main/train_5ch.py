@@ -1,12 +1,12 @@
+# train_5ch.py
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader
 from torchvision import transforms
 
 from dataset_5ch import MultiModal3DDataset
 from model_5ch import Simple3DCNN_5ch
-from transforms_3d import Normalize3D
 
 def train_model(model, dataloader, criterion, optimizer, device='cuda', num_epochs=10):
     model.to(device)
@@ -16,8 +16,7 @@ def train_model(model, dataloader, criterion, optimizer, device='cuda', num_epoc
         model.train()
         running_loss = 0.0
         for inputs, labels in dataloader:
-            inputs = inputs.to(device)
-            labels = labels.to(device)
+            inputs, labels = inputs.to(device), labels.to(device)
 
             optimizer.zero_grad()
             outputs = model(inputs)  # (B,2)
@@ -28,38 +27,30 @@ def train_model(model, dataloader, criterion, optimizer, device='cuda', num_epoc
             running_loss += loss.item()
 
         epoch_loss = running_loss / len(dataloader)
-        print(f"Epoch [{epoch+1}/{num_epochs}] Loss: {epoch_loss:.4f}")
+        print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss:.4f}")
 
         if epoch_loss < best_loss:
             best_loss = epoch_loss
             torch.save(model.state_dict(), "best_3dcnn_5ch.pth")
             print(f"  Saved best model at epoch {epoch+1} with loss {best_loss:.4f}")
 
+
 if __name__ == "__main__":
-    csv_path = "./sample_list_small_avg.csv"  # 上一步生成的CSV (含5种MR信息)
-    
-    # 数据变换示例: 统一对5通道做 Normalize
-    # transform = transforms.Compose([
-    #     transforms.Normalize(mean=[0.5]*5, std=[0.5]*5)
-    # ])
-    transform = None
-    transform = transforms.Compose([
-        # 5 通道分别的均值方差，如果都相同就 [0.5,0.5,0.5,0.5,0.5] 等
-        Normalize3D(mean=[0.5]*5, std=[0.5]*5)
-    ])
-    
-    # 构建Dataset & DataLoader
+    # 1) 先假设您已经生成了 "sample_list.csv"
+    #    里面包含 ct_path, pet_path, mr_dwi, mr_t1, mr_dynamic, label
+    csv_path = "./sample_list.csv"
+
+    # 2) 可选 transforms (去掉 Normalize2D, 或自定义3D)
+    #    如果您仅做 simple [0,1] 归一化，则这里可不再处理
+    transform = transforms.Compose([])  # 不做额外 transform
+
     dataset = MultiModal3DDataset(csv_path, transform=transform, output_shape=(64,64,64))
+    dataloader = DataLoader(dataset, batch_size=30, shuffle=True, num_workers=0)
 
-    # 为了快速测试，这里只取前10个样本
-    # dataset = Subset(dataset, range(50))
-
-    # dataloader = DataLoader(dataset, batch_size=1, shuffle=True, num_workers=0)
-    dataloader = DataLoader(dataset, batch_size=20, shuffle=True, num_workers=0)
-
-    # 初始化网络, in_channels=5
+    # 3) 初始化模型, loss, optimizer
     model = Simple3DCNN_5ch(in_channels=5, num_classes=2)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
 
+    # 4) 训练
     train_model(model, dataloader, criterion, optimizer, device='cuda', num_epochs=10)
