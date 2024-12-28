@@ -12,6 +12,8 @@ def load_dicom_series(folder_path):
     """
     if not folder_path or not os.path.isdir(folder_path):
         return None
+    
+    sitk.ProcessObject_SetGlobalWarningDisplay(False)
 
     reader = sitk.ImageSeriesReader()
     dicom_files = reader.GetGDCMSeriesFileNames(folder_path)
