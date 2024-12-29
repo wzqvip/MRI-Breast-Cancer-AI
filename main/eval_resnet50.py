@@ -78,7 +78,7 @@ if __name__ == "__main__":
     #    probs[i] 是 [prob_class0, prob_class1], preds[i] 是 argmax
     for i in range(len(preds)):
         mod_info = ",".join(used_mods_list[i]) if len(used_mods_list[i])>0 else "No Modality"
-        print(f"Sample {i}: label={labels[i]}, pred={preds[i]}, used=[{mod_info}], prob={probs[1] * 100 :.2f}%")
+        print(f"Sample {i}: label={labels[i]}, pred={preds[i]}, used=[{mod_info}], prob={probs[1]}")
 
     # 6) 如果需要更多指标: sklearn.metrics
     from sklearn.metrics import classification_report, confusion_matrix
