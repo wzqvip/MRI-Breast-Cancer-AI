@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader
 import numpy as np
 
 from model_5ch_resnet50 import SlowR50_5ch  
-from dataset_5ch import MultiModal3DDataset 
+from dataset_5ch import MultiModal3DDataset ,my_collate_fn
 
 def evaluate_model(model, dataloader, device='cuda'):
     """
@@ -44,27 +44,6 @@ def evaluate_model(model, dataloader, device='cuda'):
 
     return np.array(all_preds), np.array(all_probs), np.array(all_labels), all_used_mods
 
-def my_collate_fn(batch):
-    """
-    batch: List of tuples: [(inputs, labels, used_mods), (inputs, labels, used_mods), ...]
-    这里 used_mods 是可变长的list。
-    """
-    inputs_list, labels_list, used_mods_list = [], [], []
-
-    for (inp, lab, mods) in batch:
-        inputs_list.append(inp)       # inp shape => (5, D, H, W)
-        labels_list.append(lab)      # lab => scalar
-        used_mods_list.append(mods)  # mods => list of strings
-
-    # 把 inputs 堆叠成 (B, 5, D, H, W)
-    inputs_batch = torch.stack(inputs_list, dim=0)
-    # 把 labels 堆叠成 (B,) 
-    labels_batch = torch.tensor(labels_list, dtype=torch.long)
-
-    # used_mods_list 就保持 list of list，原样返回
-    return inputs_batch, labels_batch, used_mods_list
-
-
 if __name__ == "__main__":
     # 1) 加载已训练好的模型
     model = SlowR50_5ch(in_channels=5, num_classes=2, pretrained=False)
@@ -99,7 +78,7 @@ if __name__ == "__main__":
     #    probs[i] 是 [prob_class0, prob_class1], preds[i] 是 argmax
     for i in range(len(preds)):
         mod_info = ",".join(used_mods_list[i]) if len(used_mods_list[i])>0 else "No Modality"
-        print(f"Sample {i}: label={labels[i]}, pred={preds[i]}, used=[{mod_info}], probs={probs[i]}")
+        print(f"Sample {i}: label={labels[i]}, pred={preds[i]}, used=[{mod_info}], prob={probs[1] * 100 :.2f}%")
 
     # 6) 如果需要更多指标: sklearn.metrics
     from sklearn.metrics import classification_report, confusion_matrix

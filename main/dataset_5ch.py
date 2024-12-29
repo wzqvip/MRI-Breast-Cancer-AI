@@ -34,6 +34,29 @@ def normalize_and_resize(image_np, output_shape=(64,64,64)):
     image_resized = resize(image_np, output_shape, mode='constant', anti_aliasing=True)
     return image_resized.astype(np.float32)
 
+
+def my_collate_fn(batch):
+    """
+    batch: List of tuples: [(inputs, labels, used_mods), (inputs, labels, used_mods), ...]
+    这里 used_mods 是可变长的list。
+    """
+    inputs_list, labels_list, used_mods_list = [], [], []
+
+    for (inp, lab, mods) in batch:
+        inputs_list.append(inp)       # inp shape => (5, D, H, W)
+        labels_list.append(lab)      # lab => scalar
+        used_mods_list.append(mods)  # mods => list of strings
+
+    # 把 inputs 堆叠成 (B, 5, D, H, W)
+    inputs_batch = torch.stack(inputs_list, dim=0)
+    # 把 labels 堆叠成 (B,) 
+    labels_batch = torch.tensor(labels_list, dtype=torch.long)
+
+    # used_mods_list 就保持 list of list，原样返回
+    return inputs_batch, labels_batch, used_mods_list
+
+
+
 class MultiModal3DDataset(Dataset):
     """
     5 通道: [CT, PET, DWI, T1, dynamic]
