@@ -1,0 +1,36 @@
+Test Accuracy = 0.8571
+Sample 0: label=1, pred=1, used=[CT,PET], prob=93.33%
+Sample 1: label=1, pred=1, used=[CT,PET], prob=54.37%
+Sample 2: label=1, pred=1, used=[CT,PET], prob=99.94%
+Sample 3: label=0, pred=0, used=[CT,PET], prob=0.00%
+Sample 4: label=0, pred=0, used=[CT,PET], prob=0.00%
+Sample 5: label=0, pred=0, used=[CT,PET], prob=0.08%
+Sample 6: label=0, pred=0, used=[CT,PET], prob=0.00%
+Sample 7: label=1, pred=1, used=[MR-DWI,MR-T1,MR-dynamic], prob=98.96%
+Sample 8: label=1, pred=1, used=[CT,PET], prob=94.44%
+Sample 9: label=1, pred=0, used=[MR-DWI,MR-T1,MR-dynamic], prob=0.02%
+Sample 10: label=1, pred=1, used=[CT,PET], prob=53.64%
+Sample 11: label=1, pred=0, used=[MR-DWI,MR-T1,MR-dynamic], prob=0.01%
+Sample 12: label=0, pred=0, used=[CT,PET], prob=0.00%
+Sample 13: label=0, pred=0, used=[MR-DWI,MR-T1,MR-dynamic], prob=0.01%
+Sample 14: label=0, pred=0, used=[MR-DWI,MR-T1,MR-dynamic], prob=0.00%
+Sample 15: label=0, pred=0, used=[CT,PET], prob=0.00%
+Sample 16: label=0, pred=0, used=[CT,PET], prob=37.67%
+Sample 17: label=0, pred=0, used=[MR-DWI], prob=0.00%
+Sample 18: label=0, pred=0, used=[MR-DWI,MR-T1,MR-dynamic], prob=0.00%
+Sample 19: label=0, pred=1, used=[CT,PET], prob=71.00%
+Sample 20: label=0, pred=0, used=[MR-DWI,MR-T1,MR-dynamic], prob=0.25%
+
+Classification Report:
+              precision    recall  f1-score   support
+
+           0     0.8571    0.9231    0.8889        13
+           1     0.8571    0.7500    0.8000         8
+
+    accuracy                         0.8571        21
+   macro avg     0.8571    0.8365    0.8444        21
+weighted avg     0.8571    0.8571    0.8550        21
+
+Confusion Matrix:
+[[12  1]
+ [ 2  6]]

@@ -49,6 +49,8 @@ if __name__ == "__main__":
     model = SlowR50_5ch(in_channels=5, num_classes=2, pretrained=False)
     model.load_state_dict(torch.load("best_slow_r50_5ch.pth", map_location="cuda", weights_only=True))
 
+    print(model)
+
     # 2) 构建测试/验证集 DataLoader
     test_csv_path = "./eval_list_small_avg.csv"  # 您的评估CSV
     test_dataset = MultiModal3DDataset(
