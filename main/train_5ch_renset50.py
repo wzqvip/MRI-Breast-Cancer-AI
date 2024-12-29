@@ -40,6 +40,6 @@ if __name__ == "__main__":
 
     model = SlowR50_5ch(in_channels=5, num_classes=2, pretrained=True)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=3e-4)
+    optimizer = optim.Adam(model.parameters(), lr=4e-4)
 
     train_model(model, dataloader, criterion, optimizer, device='cuda', num_epochs=50)
