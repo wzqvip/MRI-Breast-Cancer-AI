@@ -29,4 +29,9 @@ not useful. pass
 
 (slow_r50 by facebook)
 
-~7.5GB GPU ram to train.
+85% Accuracy.
+
+
+RTX 4070 Ti Super:  ( ~7.5G RAM usage, Batch size = 4)
+
+~1'30'' for one train epoch,  ~13'' for one eval epoach.
