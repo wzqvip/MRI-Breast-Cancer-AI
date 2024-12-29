@@ -2,11 +2,9 @@
 
  A comprehensive project leveraging deep learning and advanced MRI image analysis techniques for breast cancer detection, segmentation, and prognosis prediction.
 
-
-
 ## TCIA Downloader
 
-The official TCIA downloader only works in single-thread mode and lacks speed visibility. 
+The official TCIA downloader only works in single-thread mode and lacks speed visibility.
 
 So we made our own Python based downloader. `datasets\PyDownloader\tcia_downloader.py`
 
@@ -19,3 +17,16 @@ So we made our own Python based downloader. `datasets\PyDownloader\tcia_download
 * **Simple Setup** : Key settings (file path, thread count, etc.) are defined at the top of the script for easy editing.
 
 Use with care! DO NOT VIOLATE the rules from the data provider!
+
+
+### 3D-CNN
+
+not useful. pass
+
+
+
+### 3D Resnet-50
+
+(slow_r50 by facebook)
+
+~7.5GB GPU ram to train.
