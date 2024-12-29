@@ -162,3 +162,4 @@ cython_debug/
 datasets/PyDownloader/QIN-BREAST.zip
 /datasets/PyDownloader/QIN-BREAST-01-0068
 /datasets/manifest-1542731172463
+*.pth
