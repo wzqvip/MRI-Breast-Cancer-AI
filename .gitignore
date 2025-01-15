@@ -164,3 +164,5 @@ datasets/PyDownloader/QIN-BREAST.zip
 /datasets/manifest-1542731172463
 *.pth
 datasets/PyDownloader/download_failed.log
+/main/plots
+main/train_log.csv
