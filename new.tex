@@ -1,0 +1,178 @@
+\documentclass{article}
+
+% Language setting
+\usepackage[english]{babel}
+\usepackage{float}
+% Set page size and margins
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage{subfigure}
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\title{Multimodal AI-Based Prediction of Benign and Malignant Breast Tumors}
+\author{Ziqi Wang 2021533045, Suian Zhou 2021533189, Kaiwei Wang 2022531055}
+
+\begin{document}
+\maketitle
+
+\section{Abstract}
+Breast cancer remains one of the most prevalent malignancies worldwide, with timely and accurate diagnosis playing a crucial role in treatment decision-making and patient survival. In this project, we propose a multimodal artificial intelligence (AI) model that integrates MRI, CT, and PET imaging to predict benign versus malignant breast tumors. We employ both a 3D CNN and a 3D ResNet architecture (modified for multi-channel input) to leverage the complementary information across different imaging modalities. Our preliminary experiments indicate that the proposed framework can achieve promising performance, while also highlighting the need for appropriate data preprocessing and careful hyperparameter tuning. 
+
+\section{Background}
+\subsection{Introduction}
+Breast cancer remains a formidable global health challenge, affecting millions of lives annually. The disease’s varying severity levels require tailored management approaches, ranging from routine follow-ups to invasive procedures such as biopsies or surgical resection, underscoring the critical need for reliable risk-stratification strategies. Currently, mammography combined with ultrasound, which is widely accessible even in resource-constrained regions, is considered the gold-standard combination for risk-stratified screening and early diagnosis. 
+
+However, the clinical interpretation of multimodal imaging data, especially when combined with non-imaging metadata such as patient-reported symptoms and demographic information, can be quite challenging for clinicians. Additionally, missing data, variations in scanner settings, and disparate clinical expertise all compromise diagnostic accuracy. These issues highlight the potential value of a clinically applicable multimodal AI model capable of robust differential diagnosis~\cite{BMU}.
+
+In our project, we focus on a dataset containing MRI, CT, and PET images of breast tumors. We experiment with both a custom 3D CNN and a modified ResNet architecture to achieve a benign/malignant classification. Our goal is to demonstrate how combining multiple modalities in a carefully structured 3D network can provide accurate and robust predictions, potentially improving clinical decision-making for breast cancer diagnosis.
+
+\subsection{Three Common Approaches to Breast Cancer Diagnosis}
+At present, there are three main diagnostic methods commonly used in clinical practice for breast cancer:
+
+\textbf{Ultrasound Imaging}:  
+- \textit{Advantages}: Cheap, non-invasive, effective in imaging dense glands, and widely accessible.  
+- \textit{Disadvantages}: Not sensitive to micro-calcifications (which are crucial indicators for breast cancer), operator-dependent, and may lead to a higher rate of inconclusive results.
+
+\textbf{Mammography}:  
+- \textit{Advantages}: Highly sensitive to micro-calcifications.  
+- \textit{Disadvantages}: Involves radiation, and may be less accurate for patients with extremely dense breast tissue.
+
+\textbf{Magnetic Resonance Imaging (MRI)}:  
+- \textit{Advantages}: Offers high resolution of soft tissue and can provide various sequences (T1, T2, DWI, dynamic contrast-enhanced, etc.) for detailed characterization.  
+- \textit{Disadvantages}: Interpreting MRI is complex, time-consuming, and often expensive. A higher false-positive rate (misdiagnosis) can occur, leading to additional procedures.
+
+Krzysztof J. Geras, an assistant professor at NYU, pointed out: “Breast MRI is difficult to interpret and time-consuming even for experienced radiologists. AI has great potential to improve medical diagnosis because it can learn from thousands of tests.” This affirms the motivation to apply AI models to assist breast cancer diagnosis, especially for complex MRI sequences.
+
+\section{Dataset Preparation}
+Our dataset is obtained from \url{https://commons.datacite.org/doi.org/10.7937/K9/TCIA.2016.21JUEBH0}. It includes longitudinal PET/CT and quantitative MR images collected at three time points (t1, t2, t3) for studying treatment assessment in breast cancer under neoadjuvant settings. The PET/CT images were acquired with a specialized prone-position support device, to facilitate registration with MRI data. 
+
+\subsection{Data Downloader}
+To download the data, the official TCIA file downloader is available, but we found it to be slow, single-threaded, and suboptimal for classifying files by modality. We therefore implemented a custom Python-based downloader, which organizes data by patient and modality. This organization helps in subsequent training procedures. Figure~\ref{fig:odown} shows the official downloader, and Figure~\ref{fig:ourdown} shows our custom downloader’s interface.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{image/offdownload.png}
+\caption{The official dataset downloader provided by the website.}
+\label{fig:odown}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{image/ourdownload.png}
+\caption{Our custom downloader with multi-threaded support and structured naming.}
+\label{fig:ourdown}
+\end{figure}
+
+Labels were assigned as \texttt{0} for benign and \texttt{1} for malignant tumors. By storing the data in folders corresponding to each modality scan for each patient, we greatly simplified the process of multi-modal model training. Figure~\ref{fig:ourclass} shows the classification folder structure.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{image/classfication.png}
+\caption{Organizing the image data by patient and modality (CT, PET, MRI).}
+\label{fig:ourclass}
+\end{figure}
+
+Examples of 3D reconstructions from the dataset are presented in Figures~\ref{fig:matlab}~and~5, illustrating different imaging modes (MRI, CT, PET). 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{image/matlab.png}
+\caption{MRI Breast tumor 3D reconstruction in MATLAB.}
+\label{fig:matlab}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \subfigure[CT Breast tumor 3D reconstruct using U\_viewer]{
+    \includegraphics[width =.48\textwidth]{image/CT.png}} 
+    \subfigure[PET Breast tumor 3D reconstruct using U\_viewer]{
+    \includegraphics[width =.48\textwidth]{image/PET.png}
+    }
+    \caption{Examples of CT and PET reconstructions from the dataset.}
+\end{figure}
+
+\section{Network Construction}
+In this section, we explore two different neural network architectures for our multimodal classification problem: a simple 3D CNN and a 3D ResNet50. Both networks accept a 5-channel input (CT, PET, MR-DWI, MR-T1, MR-dynamic).
+
+\subsection{3D-CNN}
+Our initial approach uses a simple 3D CNN (denoted as \texttt{Simple3DCNN\_5ch}). The input shape is \((B, 5, D, H, W)\). This network consists of two 3D convolution layers with pooling layers, followed by two fully-connected layers for binary classification. Figure~\ref{fig:3dcnn} depicts the general structure.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{image/3DCNN.png}
+\caption{A schematic of our simple 3D-CNN architecture with five input channels.}
+\label{fig:3dcnn}
+\end{figure}
+
+However, in practice, this basic 3D-CNN struggled to converge with our dataset, only reaching around $40\%$ accuracy (even below random guess for binary classification). This suggests that we need a deeper or more advanced architecture, better hyperparameter tuning, and possibly more robust data preprocessing (e.g., normalization, data augmentation) to effectively leverage the multimodal inputs.
+
+\begin{figure}[H]
+    \centering
+    \subfigure[Construction of our 3D-CNN network]{
+    \includegraphics[width =.48\textwidth]{image/CNNcon.png}}
+    \subfigure[Convergence behavior of our 3D-CNN]{
+    \includegraphics[width =.48\textwidth]{image/CNNres.png}
+    }
+    \caption{Implementation details and training curve for our 3D-CNN model.}
+\end{figure}
+
+\subsection{3D ResNet50 Architecture}
+To address the limitations of our shallow 3D-CNN, we adopt a \textbf{3D ResNet50} approach~\cite{ResNet} and customize it for multimodal breast cancer imaging. The original 2D ResNet50 has been adapted in three main ways:
+
+\begin{enumerate}
+    \item \textbf{3D Convolution and Pooling:} 
+    All \texttt{Conv2d}, \texttt{BatchNorm2d}, and \texttt{Pool2d} layers in the traditional ResNet are replaced with their 3D counterparts (\texttt{Conv3d}, \texttt{BatchNorm3d}, and \texttt{Pool3d}). Hence the network can process volumetric data $(D, H, W)$ and capture spatiotemporal/depth information in one pass. The first convolution kernel typically changes from $(7\times7)$ to $(k_T\times7\times7)$ (e.g., $(1\times7\times7)$ or $(3\times7\times7)$), and each subsequent layer also modifies the kernel shape and stride to incorporate the extra dimension.
+
+    \item \textbf{Input Channel Replacement (in\_channels = 5):}
+    Since our dataset contains five modalities (\textit{CT, PET, MR-DWI, MR-T1, MR-dynamic}) stacked as five channels, the initial $7\times7$ convolution, which originally expects 3-channel RGB images, is replaced with a $\texttt{Conv3d}(5, 64, \dots)$ layer. This way, the network directly ingests the concatenated multimodal volumes. The other layers (bottleneck blocks, skip connections) remain structurally the same, aside from their 3D nature.
+
+    \item \textbf{Adaptive Pooling \& Final Classifier:}
+    Instead of fixed-size pooling (often $(8\times7\times7)$ in 3D variants), we use \texttt{AdaptiveAvgPool3d} to handle variable input shapes. At the end of the network (originally a $\texttt{Linear}(2048, 1000)$ for ImageNet), we replace the fully-connected layer with $\texttt{Linear}(2048, 2)$ for binary classification (benign vs.\ malignant). This keeps the essence of ResNet50's bottleneck structure while tailoring it to our smaller, two-class medical task.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{image/Resnet50.png}
+\caption{Schematic of our 3D ResNet50 architecture, extended to five input channels for CT, PET, and multiple MRI sequences (DWI, T1, and dynamic).}
+\label{fig:3dresnet50}
+\end{figure}
+
+\paragraph{Network Details.}
+A concise overview of the modifications is as follows:
+
+\begin{itemize}
+    \item \textbf{3D Operations:} Each residual block uses $(3\times3\times3)$ convolutions (or $(1\times3\times3)$ if we downsample only spatially), with \texttt{BatchNorm3d} and ReLU activations. The skip connections mirror the 2D ResNet bottle\-neck logic but in 3D format.
+    \item \textbf{5-Channel Input:} The first layer is 
+    \[
+    \mathrm{Conv3d}(\text{in\_channels}=5, \text{out\_channels}=64, \text{kernel\_size}=(1,7,7), \text{stride}=(1,2,2), \dots).
+    \]
+    This directly processes the volumetric data of shape $(B,5,D,H,W)$, capturing joint information from CT, PET, and MRI sequences.
+    \item \textbf{AdaptiveAvgPool3d((1,1,1))}:  
+    Allows the network to ingest data of varying resolution $(D,H,W)$ without altering the core convolution blocks.
+    \item \textbf{Final Output Layer:}
+    A $\texttt{Linear}(2048,2)$ that maps the aggregated features to \textit{benign} or \textit{malignant}.
+\end{itemize}
+
+Compared with our simpler 3D-CNN design, this 3D ResNet50 is significantly \textit{deeper}, uses \textbf{skip connections} (residual blocks) to alleviate gradient vanishing, and can extract richer hierarchical features from multimodal volumes. In practice, these changes lead to improved convergence and stronger classification performance, as demonstrated in subsequent experiments.
+
+
+\section{Conclusion}
+In this paper, we explored a multimodal AI approach for breast tumor classification using both 3D CNN and 3D ResNet50 architectures. The inclusion of CT, PET, and MRI (multiple sequences) as input channels shows promise in improving classification performance. Although our initial simple 3D-CNN underperforms, the deeper 3D ResNet50 structure provides a more robust feature extraction mechanism, crucial for multi-sequence medical data.
+
+\section{Discussion}
+Our preliminary results highlight the challenges of integrating different imaging modalities, including data heterogeneity and balancing the parameter-rich 3D model with relatively limited training samples. Future work includes exploring advanced attention mechanisms or Transformer-based modules for better feature fusion, as well as applying domain adaptation or transfer learning strategies to further improve performance. Additionally, more extensive hyperparameter tuning and data augmentation (e.g., random cropping in 3D, flipping, intensity normalization) might help to reduce overfitting and boost accuracy.
+
+\section{Contribution}
+\begin{itemize}
+\item \textbf{Ziqi Wang}: Mainly responsible for the downloader construction, coding and network training, also assisting in writing report. All of the code is publishing on his github:
+\item \textbf{Suian Zhou}: Mainly responsible for making ppt, preparing presentation and writing report, assisting in dataset construction and 3D-CNN network design.
+\item \textbf{Kaiwei Wang}: Conducted the literature review, set up the experimental pipeline, and organized the dataset labeling (benign vs. malignant). Also assisted in final editing and discussion.
+\end{itemize}
+
+\section{Signature}
+
+\bibliographystyle{alpha}
+\bibliography{sample}
+\end{document}

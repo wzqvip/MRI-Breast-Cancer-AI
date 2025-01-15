@@ -169,8 +169,8 @@ def plot_history(train_loss, train_acc, val_loss, val_acc, out_dir="./plots"):
 
 if __name__ == "__main__":
     # ========== 1) 数据集准备 ========== #
-    train_csv_path = "./all_train.csv"
-    val_csv_path   = "./all_val.csv"
+    train_csv_path = "./only_petct_train.csv"
+    val_csv_path   = "./only_petct_val.csv"
 
     train_dataset = MultiModal3DDataset(csv_path=train_csv_path, transform=None, output_shape=(64,64,64))
     val_dataset   = MultiModal3DDataset(csv_path=val_csv_path,   transform=None, output_shape=(64,64,64))
