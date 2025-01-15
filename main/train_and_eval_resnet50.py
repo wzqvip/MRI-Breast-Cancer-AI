@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 
-# ========== 自定义模块：请根据实际位置修改 ========== #
+# ==========            自定义模块           ========== #
 from dataset_5ch import MultiModal3DDataset, my_collate_fn
 from model_5ch_resnet50 import SlowR50_5ch
 # ==================================================== #
@@ -169,24 +169,24 @@ def plot_history(train_loss, train_acc, val_loss, val_acc, out_dir="./plots"):
 
 if __name__ == "__main__":
     # ========== 1) 数据集准备 ========== #
-    train_csv_path = "./sample_list.csv"
-    val_csv_path   = "./eval_list_small_avg.csv"
+    train_csv_path = "./all_train.csv"
+    val_csv_path   = "./all_val.csv"
 
     train_dataset = MultiModal3DDataset(csv_path=train_csv_path, transform=None, output_shape=(64,64,64))
     val_dataset   = MultiModal3DDataset(csv_path=val_csv_path,   transform=None, output_shape=(64,64,64))
 
     train_loader = DataLoader(
-        train_dataset, batch_size=4, shuffle=True, num_workers=4, collate_fn=my_collate_fn
+        train_dataset, batch_size=2, shuffle=True, num_workers=4, collate_fn=my_collate_fn
     )
     val_loader   = DataLoader(
-        val_dataset,   batch_size=4, shuffle=False, num_workers=4, collate_fn=my_collate_fn
+        val_dataset,   batch_size=2, shuffle=False, num_workers=4, collate_fn=my_collate_fn
     )
 
     # ========== 2) 初始化模型/损失/优化器 ========== #
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model = SlowR50_5ch(in_channels=5, num_classes=2, pretrained=True)
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = optim.Adam(model.parameters(), lr=1e-6)
 
     # ========== 3) 训练 + 验证 + 保存 & CSV日志 ========== #
     log_csv_path = "train_log.csv"   # 训练日志保存的CSV文件
@@ -198,7 +198,7 @@ if __name__ == "__main__":
          criterion=criterion,
          optimizer=optimizer,
          device=device,
-         num_epochs=50,
+         num_epochs=20,
          save_path="best_slow_r50_5ch.pth",
          csv_log_path=log_csv_path
     )
